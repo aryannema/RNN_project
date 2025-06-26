@@ -47,3 +47,18 @@ The model is trained using Keras on the IMDB dataset and uses a `SimpleRNN` laye
    ```bash
    pip install -r requirements.txt
    ```
+
+3. Make sure the trained model file simple_rnn_imdb.h5 is in the project directory.
+
+4. Run the Streamlit app:
+   ```bash
+   streamlit run app.py
+   ```
+
+## Notes
+
+- The model uses a vocabulary size of 10,000. Words outside this range are mapped to an OOV (out-of-vocabulary) token.
+
+- The review length is capped at 500 tokens; longer reviews will be truncated.
+
+- This model is relatively simple and may not perform well on very complex or sarcastic reviews.

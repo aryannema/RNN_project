@@ -59,16 +59,23 @@ if st.button('🔍 Analyze Sentiment'):
     else:
         # Preprocess and Predict
         preprocessed_input = preprocess_text(user_input)
-        prediction = model.predict(preprocessed_input)[0][0]
-        sentiment = 'Positive 😄' if prediction > 0.5 else 'Negative 😞'
-        confidence = prediction if prediction > 0.5 else 1 - prediction
+        prediction = model.predict(preprocessed_input)
+        prediction_score = float(prediction[0][0])  # ensure proper float casting
 
-        # Show Results
+        # Classify based on threshold
+        if prediction_score > 0.5:
+            sentiment = 'Positive 😄'
+            confidence = prediction_score
+        else:
+            sentiment = 'Negative 😞'
+            confidence = 1 - prediction_score
+
+        # Display result
         st.success(f"**Sentiment:** {sentiment}")
         st.write(f"**Confidence Score:** `{confidence:.2f}`")
 
         # Optional explanation
-        if 0.4 < prediction < 0.6:
-            st.info("This review has **mixed or ambiguous sentiment** — the model is uncertain.")
+        if 0.4 < prediction_score < 0.6:
+            st.info("This review has **mixed or ambiguous sentiment** — the model was slightly uncertain.")
 else:
     st.caption("⬆️ Submit a review above to see its sentiment prediction.")

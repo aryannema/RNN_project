@@ -48,7 +48,7 @@ The model is trained using Keras on the IMDB dataset and uses a `SimpleRNN` laye
    pip install -r requirements.txt
    ```
 
-3. Make sure the trained model file simple_rnn_imdb.h5 is in the project directory.
+3. Make sure the trained model file **simple_rnn_imdb.h5** is in the project directory.
 
 4. Run the Streamlit app:
    ```bash

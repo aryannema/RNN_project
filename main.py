@@ -1,5 +1,3 @@
-# app.py
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import imdb
@@ -15,11 +13,11 @@ reverse_word_index = {value: key for key, value in word_index.items()}
 model = load_model('simple_rnn_imdb.h5')
 max_len = 500
 
-# Function to decode review (for future use)
+# Function to decode review (optional)
 def decode_review(encoded_review):
     return ' '.join([reverse_word_index.get(i - 3, '?') for i in encoded_review])
 
-# Function to preprocess user input and identify unknown words
+# Function to preprocess user input
 def preprocess_text(text):
     words = text.lower().split()
     encoded_review = []
@@ -32,61 +30,52 @@ def preprocess_text(text):
             encoded_review.append(2)  # OOV token
             unknown_words.append(word)
 
-    if unknown_words:
-        st.info(f"The following word(s) are new to the model and were not recognized: {', '.join(set(unknown_words))}")
-
     padded_review = sequence.pad_sequences([encoded_review], maxlen=max_len)
-    return padded_review
+    return padded_review, unknown_words
 
-# ----------------- Streamlit UI -----------------
-
-# Title and Instructions
+# Streamlit page setup
 st.set_page_config(page_title="IMDB Sentiment Classifier", layout="centered")
-st.title('IMDB Movie Review Sentiment Classifier')
-st.markdown("""
-Enter a short movie review in the box below. The model will analyze the **sentiment** of your review and classify it as:
-- Positive
-- Negative
+st.title("IMDB Movie Review Sentiment Classifier")
 
-This tool uses a simple RNN model trained on a portion of the IMDB movie reviews dataset.
+st.markdown("""
+This app uses a Simple RNN trained on a subset of the IMDB dataset to predict the sentiment of your review.  
+It understands only the 10,000 most common words in that dataset. Unknown words will be marked accordingly.
 """)
 
-# Sidebar - Info & Help
-with st.sidebar:
-    st.header("How it Works")
-    st.markdown("""
-    - The model is trained using a subset of the IMDB dataset with only the **10,000 most frequent words**.
-    - It uses a **SimpleRNN** layer with `tanh` activation.
-    - Words not in the model’s vocabulary are treated as unknown.
-    """)
-    st.warning("""
-    This model may not perform accurately on complex or unusual reviews due to limited vocabulary and training data.
-    """)
+# Input box
+user_input = st.text_area("Enter Your Movie Review:", height=150, placeholder="e.g. The movie was terrible but the songs were good...")
 
-# Text Input
-user_input = st.text_area('Enter Your Movie Review:', height=150, placeholder="e.g. The movie was terrible but the songs were good...")
-
-if st.button('Analyze Sentiment'):
-
+if st.button("Analyze Sentiment"):
     if not user_input.strip():
         st.warning("Please enter a non-empty review.")
     else:
-        # Preprocess and Predict
-        preprocessed_input = preprocess_text(user_input)
-        prediction = model.predict(preprocessed_input)
-        prediction_score = float(prediction[0][0])  # ensure proper float
+        try:
+            # Preprocess and predict
+            preprocessed_input, unknown_words = preprocess_text(user_input)
+            prediction = model.predict(preprocessed_input)
+            prediction_score = float(prediction[0][0])
 
-        if prediction_score > 0.5:
-            sentiment = 'Positive'
-            confidence = prediction_score
-        else:
-            sentiment = 'Negative'
-            confidence = 1 - prediction_score
+            # Classify
+            if prediction_score > 0.5:
+                sentiment = "Positive"
+                confidence = prediction_score
+            else:
+                sentiment = "Negative"
+                confidence = 1 - prediction_score
 
-        st.success(f"Sentiment: {sentiment}")
-        st.write(f"Confidence Score: {confidence:.2f}")
+            # Output results
+            st.success(f"Sentiment: {sentiment}")
+            st.write(f"Confidence Score: {confidence:.2f}")
 
-        if 0.4 < prediction_score < 0.6:
-            st.info("This review appears to have mixed or ambiguous sentiment.")
+            # Show unknown words
+            if unknown_words:
+                st.info("New words not recognized by the model: " + ", ".join(set(unknown_words)))
+
+            # Ambiguity warning
+            if 0.4 < prediction_score < 0.6:
+                st.info("This review seems to have mixed or ambiguous sentiment.")
+
+        except Exception as e:
+            st.error("An error occurred during prediction. Please try again with simpler input.")
 else:
     st.caption("Submit a review above to get its sentiment prediction.")
